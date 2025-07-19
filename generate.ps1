@@ -1,19 +1,26 @@
-"Registry::HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node", `
-    "Registry::HKEY_CURRENT_USER\SOFTWARE\Wow6432Node", `
-    "Registry::HKEY_LOCAL_MACHINE\SOFTWARE", `
-    "Registry::HKEY_CURRENT_USER\SOFTWARE" | ForEach-Object {
-    $Path = "$_\Microsoft\Microsoft SDKs\Windows\v10.0";
-    If (Test-Path -Path $Path) {
-        $Win10SDK = (Get-ItemProperty -Path $Path).InstallationFolder;
-        $Win10SDKVersion = (Get-ItemProperty -Path $Path).ProductVersion;
+If ($Env:WindowsTargetPlatformVersion -and $Env:WindowsSdkDir) {
+    $Win10SDK = $Env:WindowsSdkDir;
+    $Win10SDKVersion = $Env:WindowsTargetPlatformVersion;
+}
+Else {
+    "Registry::HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node", `
+        "Registry::HKEY_CURRENT_USER\SOFTWARE\Wow6432Node", `
+        "Registry::HKEY_LOCAL_MACHINE\SOFTWARE", `
+        "Registry::HKEY_CURRENT_USER\SOFTWARE" | ForEach-Object {
+        $Path = "$_\Microsoft\Microsoft SDKs\Windows\v10.0";
+        If (Test-Path -Path $Path) {
+            $Win10SDK = (Get-ItemProperty -Path $Path).InstallationFolder;
+            $Win10SDKVersion = (Get-ItemProperty -Path $Path).ProductVersion;
+        }
     }
 }
+
 
 If ($Null -eq $Win10SDK) {
     throw "Windows 10 SDK not found!";
 }
 
-$Include = "$Win10SDK\Include\$Win10SDKVersion.0";
+$Include = "$Win10SDK\Include\$Win10SDKVersion";
 
 $Headers = (Get-ChildItem -Path $Include -Include "*.h" -File -Recurse -ErrorAction SilentlyContinue)
 
